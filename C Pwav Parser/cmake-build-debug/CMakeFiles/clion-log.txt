@@ -1,0 +1,4 @@
+/private/var/folders/wp/ppgrdvfx1wd_n939pt9b80880000gn/T/AppTranslocation/5D53BDE4-7EF1-409D-95E6-68D50BAC4933/d/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/private/var/folders/wp/ppgrdvfx1wd_n939pt9b80880000gn/T/AppTranslocation/5D53BDE4-7EF1-409D-95E6-68D50BAC4933/d/CLion.app/Contents/bin/ninja/mac/ninja -G Ninja -S "/Users/om/Documents/GitHub/video_steg/C Pwav Parser" -B "/Users/om/Documents/GitHub/video_steg/C Pwav Parser/cmake-build-debug"
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/om/Documents/GitHub/video_steg/C Pwav Parser/cmake-build-debug
