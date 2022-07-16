@@ -16,53 +16,20 @@ unsigned char buffer4[4];
 unsigned char buffer2[2];
 
 char* seconds_to_time(float seconds);
-
-
-FILE *ptr;
 char *filename;
-struct HEADER header;
 
-int main2(int argc, char **argv) {
+header_t getHeader(FILE *fp){
 
-    filename = (char*) malloc(sizeof(char) * 1024);
-    if (filename == NULL) {
-        printf("Error in mallocn\n");
-        exit(1);
-    }
-
-    // get file path
-    char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-
-        strcpy(filename, cwd);
-
-        // get filename from command line
-        if (argc < 2) {
-            printf("No wave file specified\n");
-            return 0;
-        }
-
-        strcat(filename, "/");
-        strcat(filename, argv[1]);
-        printf("%sn", filename);
-    }
-
-    // open file
-    printf("Opening  file..\n");
-    ptr = fopen(filename, "rb");
-    if (ptr == NULL) {
-        printf("Error opening file\n");
-        exit(1);
-    }
+    header_t header;
 
     int read = 0;
 
     // read header parts
 
-    read = fread(header.riff, sizeof(header.riff), 1, ptr);
+    read = fread(header.riff, sizeof(header.riff), 1, fp);
     printf("(1-4): %s \n", header.riff);
 
-    read = fread(buffer4, sizeof(buffer4), 1, ptr);
+    read = fread(buffer4, sizeof(buffer4), 1, fp);
     printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
     // convert little endian to big endian 4 byte int
@@ -73,13 +40,13 @@ int main2(int argc, char **argv) {
 
     printf("(5-8) Overall size: bytes:%u, Kb:%u n\n", header.overall_size, header.overall_size/1024);
 
-    read = fread(header.wave, sizeof(header.wave), 1, ptr);
+    read = fread(header.wave, sizeof(header.wave), 1, fp);
     printf("(9-12) Wave marker: %s\n", header.wave);
 
-    read = fread(header.fmt_chunk_marker, sizeof(header.fmt_chunk_marker), 1, ptr);
+    read = fread(header.fmt_chunk_marker, sizeof(header.fmt_chunk_marker), 1, fp);
     printf("(13-16) Fmt marker: %s\n", header.fmt_chunk_marker);
 
-    read = fread(buffer4, sizeof(buffer4), 1, ptr);
+    read = fread(buffer4, sizeof(buffer4), 1, fp);
     printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
     // convert little endian to big endian 4 byte integer
@@ -89,7 +56,7 @@ int main2(int argc, char **argv) {
                            (buffer4[3] << 24);
     printf("(17-20) Length of Fmt header: %u \n", header.length_of_fmt);
 
-    read = fread(buffer2, sizeof(buffer2), 1, ptr); printf("%u %u \n", buffer2[0], buffer2[1]);
+    read = fread(buffer2, sizeof(buffer2), 1, fp); printf("%u %u \n", buffer2[0], buffer2[1]);
 
     header.format_type = buffer2[0] | (buffer2[1] << 8);
     char format_name[10] = "";
@@ -102,13 +69,13 @@ int main2(int argc, char **argv) {
 
     printf("(21-22) Format type: %u %s \n", header.format_type, format_name);
 
-    read = fread(buffer2, sizeof(buffer2), 1, ptr);
+    read = fread(buffer2, sizeof(buffer2), 1, fp);
     printf("%u %u \n", buffer2[0], buffer2[1]);
 
     header.channels = buffer2[0] | (buffer2[1] << 8);
     printf("(23-24) Channels: %u \n", header.channels);
 
-    read = fread(buffer4, sizeof(buffer4), 1, ptr);
+    read = fread(buffer4, sizeof(buffer4), 1, fp);
     printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
     header.sample_rate = buffer4[0] |
@@ -118,7 +85,7 @@ int main2(int argc, char **argv) {
 
     printf("(25-28) Sample rate: %u\n", header.sample_rate);
 
-    read = fread(buffer4, sizeof(buffer4), 1, ptr);
+    read = fread(buffer4, sizeof(buffer4), 1, fp);
     printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
     header.byterate  = buffer4[0] |
@@ -127,24 +94,24 @@ int main2(int argc, char **argv) {
                        (buffer4[3] << 24);
     printf("(29-32) Byte Rate: %u , Bit Rate:%u\n", header.byterate, header.byterate*8);
 
-    read = fread(buffer2, sizeof(buffer2), 1, ptr);
+    read = fread(buffer2, sizeof(buffer2), 1, fp);
     printf("%u %u \n", buffer2[0], buffer2[1]);
 
     header.block_align = buffer2[0] |
                          (buffer2[1] << 8);
     printf("(33-34) Block Alignment: %u \n", header.block_align);
 
-    read = fread(buffer2, sizeof(buffer2), 1, ptr);
+    read = fread(buffer2, sizeof(buffer2), 1, fp);
     printf("%u %u \n", buffer2[0], buffer2[1]);
 
     header.bits_per_sample = buffer2[0] |
                              (buffer2[1] << 8);
     printf("(35-36) Bits per sample: %u \n", header.bits_per_sample);
 
-    read = fread(header.data_chunk_header, sizeof(header.data_chunk_header), 1, ptr);
+    read = fread(header.data_chunk_header, sizeof(header.data_chunk_header), 1, fp);
     printf("(37-40) Data Marker: %s \n", header.data_chunk_header);
 
-    read = fread(buffer4, sizeof(buffer4), 1, ptr);
+    read = fread(buffer4, sizeof(buffer4), 1, fp);
     printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
     header.data_size = buffer4[0] |
@@ -165,7 +132,6 @@ int main2(int argc, char **argv) {
     float duration_in_seconds = (float) header.overall_size / header.byterate;
     printf("Approx.Duration in seconds=%f\n", duration_in_seconds);
     printf("Approx.Duration in h:m:s=%s\n", seconds_to_time(duration_in_seconds));
-
 
 
     // read each sample from data chunk if PCM
@@ -208,7 +174,7 @@ int main2(int argc, char **argv) {
                 printf("nn.Valid range for data values : %ld to %ld \n", low_limit, high_limit);
                 for (i =1; i <= num_samples; i++) {
                     printf("==========Sample %ld / %ld=============\n", i, num_samples);
-                    read = fread(data_buffer, sizeof(data_buffer), 1, ptr);
+                    read = fread(data_buffer, sizeof(data_buffer), 1, fp);
                     if (read == 1) {
 
                         // dump the data read
@@ -258,11 +224,11 @@ int main2(int argc, char **argv) {
     } //  if (header.format_type == 1) {
 
     printf("Closing file..\n");
-    fclose(ptr);
+    fclose(fp);
 
     // cleanup before quitting
     free(filename);
-    return 0;
+    return header;
 
 }
 
