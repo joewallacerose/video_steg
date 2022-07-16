@@ -11,14 +11,24 @@
 #define FALSE 0
 
 // WAVE header structure
-
 unsigned char buffer4[4];
 unsigned char buffer2[2];
 
-char* seconds_to_time(float seconds);
-char *filename;
 
-header_t getHeader(FILE *fp){
+char* seconds_to_time(float seconds);
+
+int main(){
+    char *filename = "COIN.wav";
+    FILE *fp = fopen(filename, "rb");
+
+    header_t h = getHeader(fp);
+
+
+    return 0;
+}
+
+header_t getHeader(FILE *fp) {
+
 
     header_t header;
 
@@ -33,12 +43,12 @@ header_t getHeader(FILE *fp){
     printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
     // convert little endian to big endian 4 byte int
-    header.overall_size  = buffer4[0] |
-                           (buffer4[1]<<8) |
-                           (buffer4[2]<<16) |
-                           (buffer4[3]<<24);
+    header.overall_size = buffer4[0] |
+                          (buffer4[1] << 8) |
+                          (buffer4[2] << 16) |
+                          (buffer4[3] << 24);
 
-    printf("(5-8) Overall size: bytes:%u, Kb:%u n\n", header.overall_size, header.overall_size/1024);
+    printf("(5-8) Overall size: bytes:%u, Kb:%u n\n", header.overall_size, header.overall_size / 1024);
 
     read = fread(header.wave, sizeof(header.wave), 1, fp);
     printf("(9-12) Wave marker: %s\n", header.wave);
@@ -56,12 +66,13 @@ header_t getHeader(FILE *fp){
                            (buffer4[3] << 24);
     printf("(17-20) Length of Fmt header: %u \n", header.length_of_fmt);
 
-    read = fread(buffer2, sizeof(buffer2), 1, fp); printf("%u %u \n", buffer2[0], buffer2[1]);
+    read = fread(buffer2, sizeof(buffer2), 1, fp);
+    printf("%u %u \n", buffer2[0], buffer2[1]);
 
     header.format_type = buffer2[0] | (buffer2[1] << 8);
     char format_name[10] = "";
     if (header.format_type == 1)
-        strcpy(format_name,"PCM");
+        strcpy(format_name, "PCM");
     else if (header.format_type == 6)
         strcpy(format_name, "A-law");
     else if (header.format_type == 7)
@@ -88,11 +99,11 @@ header_t getHeader(FILE *fp){
     read = fread(buffer4, sizeof(buffer4), 1, fp);
     printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
-    header.byterate  = buffer4[0] |
-                       (buffer4[1] << 8) |
-                       (buffer4[2] << 16) |
-                       (buffer4[3] << 24);
-    printf("(29-32) Byte Rate: %u , Bit Rate:%u\n", header.byterate, header.byterate*8);
+    header.byterate = buffer4[0] |
+                      (buffer4[1] << 8) |
+                      (buffer4[2] << 16) |
+                      (buffer4[3] << 24);
+    printf("(29-32) Byte Rate: %u , Bit Rate:%u\n", header.byterate, header.byterate * 8);
 
     read = fread(buffer2, sizeof(buffer2), 1, fp);
     printf("%u %u \n", buffer2[0], buffer2[1]);
@@ -117,7 +128,7 @@ header_t getHeader(FILE *fp){
     header.data_size = buffer4[0] |
                        (buffer4[1] << 8) |
                        (buffer4[2] << 16) |
-                       (buffer4[3] << 24 );
+                       (buffer4[3] << 24);
     printf("(41-44) Size of data chunk: %u \n", header.data_size);
 
 
@@ -133,102 +144,116 @@ header_t getHeader(FILE *fp){
     printf("Approx.Duration in seconds=%f\n", duration_in_seconds);
     printf("Approx.Duration in h:m:s=%s\n", seconds_to_time(duration_in_seconds));
 
+    return header;
+
+}
+
+filedata_t getfileData(FILE *fp, header_t header){
+
+    filedata_t data = {.noChannels = header.channels};
 
     // read each sample from data chunk if PCM
     if (header.format_type == 1) { // PCM
-        printf("Dump sample data? Y/N?");
-        char c = 'n';
-        scanf("%c", &c);
-        if (c == 'Y' || c == 'y') {
-            long i =0;
-            char data_buffer[size_of_each_sample];
-            int  size_is_correct = TRUE;
+        long num_samples = (8 * header.data_size) / (header.channels * header.bits_per_sample);
+        long size_of_each_sample = (header.channels * header.bits_per_sample) / 8;
+        long i =0;
+        int read = 0;
+        // ALLOC DATA FOR THE CHANNEL
 
-            // make sure that the bytes-per-sample is completely divisible by num.of channels
-            long bytes_in_each_channel = (size_of_each_sample / header.channels);
-            if ((bytes_in_each_channel  * header.channels) != size_of_each_sample) {
-                printf("Error: %ld x %ud <> %ld\n", bytes_in_each_channel, header.channels, size_of_each_sample);
-                size_is_correct = FALSE;
+        data.channels = malloc(header.channels * sizeof(channel_t *));
+
+        char data_buffer[size_of_each_sample];
+        int  size_is_correct = TRUE;
+
+        // make sure that the bytes-per-sample is completely divisible by num.of channels
+        long bytes_in_each_channel = (size_of_each_sample / header.channels);
+        if ((bytes_in_each_channel  * header.channels) != size_of_each_sample) {
+            printf("Error: %ld x %ud <> %ld\n", bytes_in_each_channel, header.channels, size_of_each_sample);
+            size_is_correct = FALSE;
+        }
+
+        if (size_is_correct) {
+            // the valid amplitude range for values based on the bits per sample
+            long low_limit = 0l;
+            long high_limit = 0l;
+
+            switch (header.bits_per_sample) {
+                case 8:
+                    low_limit = -128;
+                    high_limit = 127;
+                    break;
+                case 16:
+                    low_limit = -32768;
+                    high_limit = 32767;
+                    break;
+                case 32:
+                    low_limit = -2147483648;
+                    high_limit = 2147483647;
+                    break;
             }
 
-            if (size_is_correct) {
-                // the valid amplitude range for values based on the bits per sample
-                long low_limit = 0l;
-                long high_limit = 0l;
+            printf("nn.Valid range for data values : %ld to %ld \n", low_limit, high_limit);
+            for (i =1; i <= num_samples; i++) {
+                printf("==========Sample %ld / %ld=============\n", i, num_samples);
+                read = fread(data_buffer, sizeof(data_buffer), 1, fp);
+                if (read == 1) {
 
-                switch (header.bits_per_sample) {
-                    case 8:
-                        low_limit = -128;
-                        high_limit = 127;
-                        break;
-                    case 16:
-                        low_limit = -32768;
-                        high_limit = 32767;
-                        break;
-                    case 32:
-                        low_limit = -2147483648;
-                        high_limit = 2147483647;
-                        break;
-                }
+                    // dump the data read
+                    unsigned int  xchannels = 0;
+                    int data_in_channel = 0;
+                    int offset = 0; // move the offset for every iteration in the loop below
+                    for (xchannels = 0; xchannels < header.channels; xchannels ++ ) {
 
-                printf("nn.Valid range for data values : %ld to %ld \n", low_limit, high_limit);
-                for (i =1; i <= num_samples; i++) {
-                    printf("==========Sample %ld / %ld=============\n", i, num_samples);
-                    read = fread(data_buffer, sizeof(data_buffer), 1, fp);
-                    if (read == 1) {
+                        data.channels[i].size = num_samples;
+                        data.channels[i].samples = malloc(sizeof (unsigned int) * num_samples);
 
-                        // dump the data read
-                        unsigned int  xchannels = 0;
-                        int data_in_channel = 0;
-                        int offset = 0; // move the offset for every iteration in the loop below
-                        for (xchannels = 0; xchannels < header.channels; xchannels ++ ) {
-                            printf("Channel#%d : ", (xchannels+1));
-                            // convert data from little endian to big endian based on bytes in each channel sample
-                            if (bytes_in_each_channel == 4) {
-                                data_in_channel = (data_buffer[offset] & 0x00ff) |
-                                                  ((data_buffer[offset + 1] & 0x00ff) <<8) |
-                                                  ((data_buffer[offset + 2] & 0x00ff) <<16) |
-                                                  (data_buffer[offset + 3]<<24);
-                            }
-                            else if (bytes_in_each_channel == 2) {
-                                data_in_channel = (data_buffer[offset] & 0x00ff) |
-                                                  (data_buffer[offset + 1] << 8);
-                            }
-                            else if (bytes_in_each_channel == 1) {
-                                data_in_channel = data_buffer[offset] & 0x00ff;
-                                data_in_channel -= 128; //in wave, 8-bit are unsigned, so shifting to signed
-                            }
-
-                            offset += bytes_in_each_channel;
-                            printf("%d ", data_in_channel);
-
-                            // check if value was in range
-                            if (data_in_channel < low_limit || data_in_channel > high_limit)
-                                printf("**value out of range\n");
-
-                            printf(" | ");
+                        printf("Channel#%d : ", (xchannels+1));
+                        // convert data from little endian to big endian based on bytes in each channel sample
+                        if (bytes_in_each_channel == 4) {
+                            data_in_channel = (data_buffer[offset] & 0x00ff) |
+                                              ((data_buffer[offset + 1] & 0x00ff) <<8) |
+                                              ((data_buffer[offset + 2] & 0x00ff) <<16) |
+                                              (data_buffer[offset + 3]<<24);
+                        }
+                        else if (bytes_in_each_channel == 2) {
+                            data_in_channel = (data_buffer[offset] & 0x00ff) |
+                                              (data_buffer[offset + 1] << 8);
+                        }
+                        else if (bytes_in_each_channel == 1) {
+                            data_in_channel = data_buffer[offset] & 0x00ff;
+                            data_in_channel -= 128; //in wave, 8-bit are unsigned, so shifting to signed
                         }
 
-                        printf("\n");
+                        offset += bytes_in_each_channel;
+                        printf("%d ", data_in_channel);
+
+                        data.channels[xchannels].samples[i] = data_in_channel;
+
+                        // check if value was in range
+                        if (data_in_channel < low_limit || data_in_channel > high_limit)
+                            printf("**value out of range\n");
+
+                        printf(" | ");
                     }
-                    else {
-                        printf("Error reading file. %d bytes\n", read);
-                        break;
-                    }
 
-                } // 	for (i =1; i <= num_samples; i++) {
+                    printf("\n");
+                }
+                else {
+                    printf("Error reading file. %d bytes\n", read);
+                    break;
+                }
 
-            } // 	if (size_is_correct) {
+            } // 	for (i =1; i <= num_samples; i++) {
 
-        } // if (c == 'Y' || c == 'y') {
-    } //  if (header.format_type == 1) {
+        } // 	if (size_is_correct) {
+    } else {
+        printf("Data not read\n");
+    }//  if (header.format_type == 1) {
 
-    printf("Closing file..\n");
-    fclose(fp);
+    printf("Exiting Function..\n");
 
     // cleanup before quitting
-    free(filename);
-    return header;
+    return data;
 
 }
 
@@ -264,3 +289,5 @@ char* seconds_to_time(float raw_seconds) {
     sprintf(hms, "%d:%d:%d.%d", hours, minutes, seconds, milliseconds);
     return hms;
 }
+
+
