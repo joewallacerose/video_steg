@@ -55,6 +55,18 @@ build CMakeFiles/C_Pwav_Parser.dir/wave.c.o: C_COMPILER__C_Pwav_Parser_Debug /Us
   OBJECT_DIR = CMakeFiles/C_Pwav_Parser.dir
   OBJECT_FILE_DIR = CMakeFiles/C_Pwav_Parser.dir
 
+build CMakeFiles/C_Pwav_Parser.dir/steg_write.c.o: C_COMPILER__C_Pwav_Parser_Debug /Users/om/Documents/GitHub/video_steg/C$ Pwav$ Parser/steg_write.c || cmake_object_order_depends_target_C_Pwav_Parser
+  DEP_FILE = CMakeFiles/C_Pwav_Parser.dir/steg_write.c.o.d
+  FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=12.1 -std=gnu99
+  OBJECT_DIR = CMakeFiles/C_Pwav_Parser.dir
+  OBJECT_FILE_DIR = CMakeFiles/C_Pwav_Parser.dir
+
+build CMakeFiles/C_Pwav_Parser.dir/steg_read.c.o: C_COMPILER__C_Pwav_Parser_Debug /Users/om/Documents/GitHub/video_steg/C$ Pwav$ Parser/steg_read.c || cmake_object_order_depends_target_C_Pwav_Parser
+  DEP_FILE = CMakeFiles/C_Pwav_Parser.dir/steg_read.c.o.d
+  FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=12.1 -std=gnu99
+  OBJECT_DIR = CMakeFiles/C_Pwav_Parser.dir
+  OBJECT_FILE_DIR = CMakeFiles/C_Pwav_Parser.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target C_Pwav_Parser
@@ -63,7 +75,7 @@ build CMakeFiles/C_Pwav_Parser.dir/wave.c.o: C_COMPILER__C_Pwav_Parser_Debug /Us
 #############################################
 # Link the executable C_Pwav_Parser
 
-build C_Pwav_Parser: C_EXECUTABLE_LINKER__C_Pwav_Parser_Debug CMakeFiles/C_Pwav_Parser.dir/wave.c.o
+build C_Pwav_Parser: C_EXECUTABLE_LINKER__C_Pwav_Parser_Debug CMakeFiles/C_Pwav_Parser.dir/wave.c.o CMakeFiles/C_Pwav_Parser.dir/steg_write.c.o CMakeFiles/C_Pwav_Parser.dir/steg_read.c.o
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=12.1
   OBJECT_DIR = CMakeFiles/C_Pwav_Parser.dir
   POST_BUILD = :

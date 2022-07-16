@@ -3,4 +3,4 @@ project(C_Pwav_Parser C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(C_Pwav_Parser wave.c wave.h)
+add_executable(C_Pwav_Parser wave.c wave.h steg_write.c steg_write.h steg_read.c steg_read.h)

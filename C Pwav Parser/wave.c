@@ -22,7 +22,7 @@ FILE *ptr;
 char *filename;
 struct HEADER header;
 
-int main(int argc, char **argv) {
+int main2(int argc, char **argv) {
 
     filename = (char*) malloc(sizeof(char) * 1024);
     if (filename == NULL) {
