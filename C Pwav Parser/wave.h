@@ -43,6 +43,6 @@ filedata_t getfileData(FILE *fp, header_t header);
 
 void freeFileData(filedata_t f);
 
-void writeFile(header_t header, filedata_t data);
+void writeFile(FILE *fp, header_t header, filedata_t data);
 
 #endif //C_PWAV_PARSER_WAVE_H
