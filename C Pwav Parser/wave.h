@@ -23,7 +23,7 @@ typedef struct HEADER {
     unsigned int byterate;						// SampleRate * NumChannels * BitsPerSample/8
     unsigned int block_align;					// NumChannels * BitsPerSample/8
     unsigned int bits_per_sample;				// bits per sample, 8- 8bits, 16- 16 bits etc
-    unsigned char data_chunk_header [4];		// DATA string or FLLR string
+    unsigned char data_chunk_header [5];		// DATA string or FLLR string
     unsigned int data_size;// NumSamples * NumChannels * BitsPerSample/8 - size of the next chunk that will be read
 } header_t;
 
@@ -39,7 +39,9 @@ typedef struct FILEDATA {
 
 header_t getHeader(FILE *fp);
 
-filedata_t getFileData(FILE *fp, header_t header);
+filedata_t getfileData(FILE *fp, header_t header);
+
+void freeFileData(filedata_t f);
 
 void writeFile(header_t header, filedata_t data);
 

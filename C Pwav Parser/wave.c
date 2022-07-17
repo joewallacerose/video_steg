@@ -21,8 +21,17 @@ int main(){
     char *filename = "COIN.wav";
     FILE *fp = fopen(filename, "rb");
 
-    header_t h = getHeader(fp);
+    if (fp == NULL){
+        printf("I AM SORRY THE FILE CANNOT BE OPENED");
+        return 0; 
+    }
 
+    header_t h = getHeader(fp);
+    filedata_t d = getfileData(fp, h);
+
+    freeFileData(d);
+
+    fclose(fp);
 
     return 0;
 }
@@ -119,17 +128,31 @@ header_t getHeader(FILE *fp) {
                              (buffer2[1] << 8);
     printf("(35-36) Bits per sample: %u \n", header.bits_per_sample);
 
-    read = fread(header.data_chunk_header, sizeof(header.data_chunk_header), 1, fp);
-    printf("(37-40) Data Marker: %s \n", header.data_chunk_header);
+    header.data_chunk_header[0] = 0;
+    header.data_chunk_header[1] = 0;
+    header.data_chunk_header[2] = 0;
+    header.data_chunk_header[3] = 0;
+    header.data_chunk_header[4] = 0;
 
-    read = fread(buffer4, sizeof(buffer4), 1, fp);
-    printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
+    header.data_size =0;
 
-    header.data_size = buffer4[0] |
-                       (buffer4[1] << 8) |
-                       (buffer4[2] << 16) |
-                       (buffer4[3] << 24);
-    printf("(41-44) Size of data chunk: %u \n", header.data_size);
+    while (strcmp(header.data_chunk_header, "data") != 0){
+        fseek(fp, header.data_size, SEEK_CUR);
+        read = fread(header.data_chunk_header, sizeof(header.data_chunk_header) - 1, 1, fp);
+        printf("(37-40) Data Marker: %s \n", header.data_chunk_header);
+
+        read = fread(buffer4, sizeof(buffer4), 1, fp);
+        printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
+
+        header.data_size = buffer4[0] |
+                           (buffer4[1] << 8) |
+                           (buffer4[2] << 16) |
+                           (buffer4[3] << 24);
+        printf("(41-44) Size of data chunk: %u \n", header.data_size);
+    }
+
+
+
 
 
     // calculate no.of samples
@@ -192,9 +215,16 @@ filedata_t getfileData(FILE *fp, header_t header){
                     break;
             }
 
+            for (int i = 0 ; i < header.channels; i ++){
+                data.channels[i].size = num_samples;
+                data.channels[i].samples = malloc(sizeof (unsigned int) * num_samples);
+            }
+
             printf("nn.Valid range for data values : %ld to %ld \n", low_limit, high_limit);
             for (i =1; i <= num_samples; i++) {
-                printf("==========Sample %ld / %ld=============\n", i, num_samples);
+
+                //printf("==========Sample %ld / %ld=============\n", i, num_samples);
+                //printf("1\n");
                 read = fread(data_buffer, sizeof(data_buffer), 1, fp);
                 if (read == 1) {
 
@@ -204,10 +234,10 @@ filedata_t getfileData(FILE *fp, header_t header){
                     int offset = 0; // move the offset for every iteration in the loop below
                     for (xchannels = 0; xchannels < header.channels; xchannels ++ ) {
 
-                        data.channels[i].size = num_samples;
-                        data.channels[i].samples = malloc(sizeof (unsigned int) * num_samples);
 
-                        printf("Channel#%d : ", (xchannels+1));
+
+                        //printf("Channel#%d : ", (xchannels+1));
+
                         // convert data from little endian to big endian based on bytes in each channel sample
                         if (bytes_in_each_channel == 4) {
                             data_in_channel = (data_buffer[offset] & 0x00ff) |
@@ -225,18 +255,17 @@ filedata_t getfileData(FILE *fp, header_t header){
                         }
 
                         offset += bytes_in_each_channel;
-                        printf("%d ", data_in_channel);
-
+                        //printf("%d ", data_in_channel);
                         data.channels[xchannels].samples[i] = data_in_channel;
 
                         // check if value was in range
                         if (data_in_channel < low_limit || data_in_channel > high_limit)
                             printf("**value out of range\n");
 
-                        printf(" | ");
+                        //printf(" | ");
                     }
 
-                    printf("\n");
+                    //printf("\n");
                 }
                 else {
                     printf("Error reading file. %d bytes\n", read);
@@ -255,6 +284,13 @@ filedata_t getfileData(FILE *fp, header_t header){
     // cleanup before quitting
     return data;
 
+}
+
+void freeFileData(filedata_t f){
+    for (int i = 0; i < f.noChannels; i ++){
+        free(f.channels[i].samples);
+    }
+    free(f.channels);
 }
 
 /**
