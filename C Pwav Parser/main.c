@@ -1,10 +1,11 @@
 #include "wave.h"
+#include "steg_write.h"
 
 FILE *ptr;
 char *filename;
 
 int main(int argc, char **argv){
-    printf("Running main\n");
+/*    printf("Running main\n");
 
     filename = (char*) malloc(sizeof(char) * 1024);
     if (filename == NULL) {
@@ -38,4 +39,25 @@ int main(int argc, char **argv){
     }
 
     return EXIT_SUCCESS;
+    */
+
+    char *soundFile = "COIN.wav";
+    char *dataFile = "data.txt";
+    FILE *fp = fopen(soundFile, "rb");
+
+    if (fp == NULL){
+        printf("I AM SORRY THE FILE CANNOT BE OPENED LOL");
+        return 0;
+    }
+
+    header_t h = getHeader(fp);
+    filedata_t d = getfileData(fp, h);
+
+    writeSteg(d,h,dataFile);
+
+    //freeFileData(d);
+
+    //fclose(fp);
+
+    return 0;
 }
