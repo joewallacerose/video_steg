@@ -16,7 +16,7 @@ unsigned char buffer2[2];
 
 
 char* seconds_to_time(float seconds);
-
+/*
 int main(){
     char *filename = "COIN.wav";
     FILE *fp = fopen(filename, "rb");
@@ -33,14 +33,14 @@ int main(){
     fp = fopen("showingOff.wav", "wb");
 
     writeFile(fp, h, d);
-    
+
 
     fclose(fp);
 
     freeFileData(d);
 
     return 0;
-}
+}*/
 
 header_t getHeader(FILE *fp) {
 
