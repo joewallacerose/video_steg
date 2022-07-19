@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#define BITS_ENCODED_PER_NUMBER 4
+#define BITS_ENCODED_PER_SAMPLE 4
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
   (byte & 0x80 ? '1' : '0'), \
@@ -15,7 +14,7 @@
 
 
 unsigned int raw[12] = {0x56, 0x12, 0x23, 0x74, 0xFF, 0xAB, 0x56, 0x12, 0x23, 0x74, 0xFF, 0xAB};
-uint8_t tohide[4] = {0x01, 0x23, 0x45, 0x67};
+unsigned char tohide[4] = {0x01, 0x23, 0x45, 0x67};
 
 
 int main() {

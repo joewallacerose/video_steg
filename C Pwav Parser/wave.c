@@ -240,13 +240,10 @@ filedata_t getfileData(FILE *fp, header_t header){
                 if (read == 1) {
 
                     // dump the data read
-                    unsigned int  xchannels = 0;
+                    unsigned int xchannels = 0;
                     int data_in_channel = 0;
                     int offset = 0; // move the offset for every iteration in the loop below
                     for (xchannels = 0; xchannels < header.channels; xchannels ++ ) {
-
-
-
                         //printf("Channel#%d : ", (xchannels+1));
 
                         // convert data from little endian to big endian based on bytes in each channel sample
